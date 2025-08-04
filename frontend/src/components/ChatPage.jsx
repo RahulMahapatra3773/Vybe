@@ -23,7 +23,7 @@ const ChatPage = () => {
 
     try {
       const res = await axios.post(
-        `https://vybe-1.onrender.com/api/v1/message/send/${receiverId}`,
+        `https://vybe-q98w.onrender.com/api/v1/message/send/${receiverId}`,
         { message: textMessage },
         {
           headers: { 'Content-Type': 'application/json' },

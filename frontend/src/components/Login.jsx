@@ -29,7 +29,7 @@ const Login = () => {
     try {
       setLoading(true);
       const res = await axios.post(
-        'https://vybe-1.onrender.com/api/v1/user/login',
+        'https://vybe-q98w.onrender.com/api/v1/user/login',
         input,
         {
           headers: { 'Content-Type': 'application/json' },

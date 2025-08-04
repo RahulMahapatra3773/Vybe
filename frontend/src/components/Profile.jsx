@@ -26,7 +26,7 @@ const Profile = () => {
   const handleFollowToggle = async () => {
     try {
       await axios.post(
-        `https://vybe-1.onrender.com/api/v1/user/followorunfollow/${userProfile._id}`,
+        `https://vybe-q98w.onrender.com/api/v1/user/followorunfollow/${userProfile._id}`,
         {},
         { withCredentials: true }
       );

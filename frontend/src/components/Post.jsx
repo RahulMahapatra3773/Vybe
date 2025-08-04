@@ -30,7 +30,7 @@ const Post = ({ post }) => {
   const deletePostHandler = async () => {
     try {
       const res = await axios.delete(
-        `https://vybe-1.onrender.com/api/v1/post/delete/${post?._id}`,
+        `https://vybe-q98w.onrender.com/api/v1/post/delete/${post?._id}`,
         { withCredentials: true }
       );
       if (res.data.success) {
@@ -49,7 +49,7 @@ const Post = ({ post }) => {
       const alreadyFollowing = user?.following?.includes(targetUserId);
 
       await axios.post(
-        `https://vybe-1.onrender.com/api/v1/user/followorunfollow/${targetUserId}`,
+        `https://vybe-q98w.onrender.com/api/v1/user/followorunfollow/${targetUserId}`,
         {},
         { withCredentials: true }
       );
@@ -65,7 +65,7 @@ const Post = ({ post }) => {
     try {
       const action = liked ? 'dislike' : 'like';
       const res = await axios.get(
-        `https://vybe-1.onrender.com/api/v1/post/${post._id}/${action}`,
+        `https://vybe-q98w.onrender.com/api/v1/post/${post._id}/${action}`,
         { withCredentials: true }
       );
       if (res.data.success) {
@@ -108,7 +108,7 @@ const Post = ({ post }) => {
   const commentHandler = async () => {
     try {
       const res = await axios.post(
-        `https://vybe-1.onrender.com/api/v1/post/${post._id}/comment`,
+        `https://vybe-q98w.onrender.com/api/v1/post/${post._id}/comment`,
         { text },
         {
           headers: { 'Content-Type': 'application/json' },
@@ -135,7 +135,7 @@ const Post = ({ post }) => {
   const bookmarkHandler = async () => {
     try {
       const res = await axios.get(
-        `https://vybe-1.onrender.com/api/v1/post/${post?._id}/bookmark`,
+        `https://vybe-q98w.onrender.com/api/v1/post/${post?._id}/bookmark`,
         { withCredentials: true }
       );
       if (res.data.success) toast.success(res.data.message);

@@ -13,7 +13,7 @@ const useGetMessagesPaginated = (page = 1, limit = 20) => {
     const fetchMessages = async () => {
       try {
         const res = await axios.get(
-          `https://vybe-1.onrender.com/api/v1/message/all/${selectedUser._id}?page=${page}&limit=${limit}`,
+          `https://vybe-q98w.onrender.com/api/v1/message/all/${selectedUser._id}?page=${page}&limit=${limit}`,
           { withCredentials: true }
         );
 

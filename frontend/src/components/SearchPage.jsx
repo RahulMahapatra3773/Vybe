@@ -21,7 +21,7 @@ const SearchPage = () => {
     setLoading(true);
     try {
       const res = await axios.get(
-        `https://vybe-1.onrender.com/api/v1/user/search?query=${query}`,
+        `https://vybe-q98w.onrender.com/api/v1/user/search?query=${query}`,
         { withCredentials: true }
       );
       setUsers(res.data.users || []);

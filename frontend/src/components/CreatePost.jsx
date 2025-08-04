@@ -73,7 +73,7 @@ const CreatePost = ({ open, setOpen }) => {
     try {
       setLoading(true);
       const res = await axios.post(
-        'https://vybe-1.onrender.com/api/v1/post/addpost',
+        'https://vybe-q98w.onrender.com/api/v1/post/addpost',
         formData,
         {
           headers: { 'Content-Type': 'multipart/form-data' },

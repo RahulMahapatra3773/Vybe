@@ -33,7 +33,7 @@ const CommentDialog = ({ open, setOpen }) => {
 
     try {
       const res = await axios.post(
-        `https://vybe-1.onrender.com/api/v1/post/${selectedPost._id}/comment`,
+        `https://vybe-q98w.onrender.com/api/v1/post/${selectedPost._id}/comment`,
         { text },
         {
           headers: { 'Content-Type': 'application/json' },
