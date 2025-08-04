@@ -16,7 +16,7 @@ const SuggestedUsers = () => {
       const alreadyFollowing = user?.following?.includes(targetUserId);
       
       await axios.post(
-        `http://localhost:8000/api/v1/user/followorunfollow/${targetUserId}`,
+        `https://vybe-1.onrender.com/api/v1/user/followorunfollow/${targetUserId}`,
         {},
         { withCredentials: true }
       );

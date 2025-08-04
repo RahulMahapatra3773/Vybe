@@ -12,7 +12,7 @@ const useGetExplorePost = () => {
         const fetchExplorePosts = async () => {
             try {
                 const res = await axios.get(
-                    "http://localhost:8000/api/v1/post/explore",
+                    "https://vybe-1.onrender.com/api/v1/post/explore",
                     { withCredentials: true }
                 );
                 if (res.data.success && isMounted) {

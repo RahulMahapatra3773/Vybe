@@ -62,7 +62,7 @@ const Story = () => {
 
     try {
       const res = await axios.post(
-        "http://localhost:8000/api/v1/story/add",
+        "https://vybe-1.onrender.com/api/v1/story/add",
         formData,
         {
           withCredentials: true,
@@ -76,7 +76,7 @@ const Story = () => {
         toast.success("Story added successfully");
         setImage(null);
         setPreview('');
-        const storiesRes = await axios.get("http://localhost:8000/api/v1/story", {
+        const storiesRes = await axios.get("https://vybe-1.onrender.com/api/v1/story", {
           withCredentials: true,
         });
         if (storiesRes.data.success) {

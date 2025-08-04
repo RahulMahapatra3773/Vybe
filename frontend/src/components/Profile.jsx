@@ -26,7 +26,7 @@ const Profile = () => {
   const handleFollowToggle = async () => {
     try {
       await axios.post(
-        `http://localhost:8000/api/v1/user/followorunfollow/${userProfile._id}`,
+        `https://vybe-1.onrender.com/api/v1/user/followorunfollow/${userProfile._id}`,
         {},
         { withCredentials: true }
       );
@@ -44,7 +44,7 @@ const Profile = () => {
 
       setMutualsLoading(true);
       try {
-        const res = await axios.get(`http://localhost:8000/api/v1/user/mutuals/${userId}`, {
+        const res = await axios.get(`https://vybe-1.onrender.com/api/v1/user/mutuals/${userId}`, {
           withCredentials: true,
         });
 

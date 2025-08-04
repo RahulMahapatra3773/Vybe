@@ -12,7 +12,7 @@ const useGetFeedPosts = () => {
         const fetchFeedPosts = async () => {
             try {
                 const res = await axios.get(
-                    "http://localhost:8000/api/v1/post/feed",
+                    "https://vybe-1.onrender.com/api/v1/post/feed",
                     { withCredentials: true }
                 );
 
