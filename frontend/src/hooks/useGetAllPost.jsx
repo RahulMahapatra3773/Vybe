@@ -7,7 +7,7 @@ const useGetFeedPosts = () => {
     const dispatch = useDispatch();
 
     useEffect(() => {
-        let isMounted = true; // to prevent dispatch after unmount
+        let isMounted = true;
 
         const fetchFeedPosts = async () => {
             try {
