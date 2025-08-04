@@ -45,7 +45,7 @@ function App() {
 
   useEffect(() => {
     if (user && user._id && !socketRef.current) {
-      const socketio = io('http://localhost:8000', {
+      const socketio = io('https://vybe-q98w.onrender.com/', {
         query: { userId: user._id },
         transports: ['websocket'],
         withCredentials: true,
