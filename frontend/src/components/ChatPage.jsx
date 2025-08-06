@@ -97,7 +97,6 @@ const ChatPage = () => {
           flex flex-col shadow-2xl overflow-hidden
         `}
       >
-        {/* Fixed Header */}
         <div className="flex-shrink-0 p-4 border-b border-blue-500/20 bg-gradient-to-r from-blue-600/10 to-purple-600/10">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-3">
@@ -122,8 +121,6 @@ const ChatPage = () => {
             </button>
           </div>
         </div>
-
-        {/* Scrollable User List */}
         <div className="flex-1 overflow-y-auto p-3">
           {suggestedUsers.length > 0 ? (
             <div className="space-y-2">
@@ -189,12 +186,9 @@ const ChatPage = () => {
           )}
         </div>
       </aside>
-
-      {/* Main Chat Area */}
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {selectedUser ? (
           <>
-            {/* Fixed Header */}
             <header className="flex-shrink-0 flex items-center gap-3 px-4 py-3 border-b border-blue-500/20 bg-gradient-to-r from-black/80 to-gray-900/80 backdrop-blur-lg">
               <button
                 onClick={() => setSidebarOpen(true)}
@@ -230,14 +224,10 @@ const ChatPage = () => {
                 </div>
               </div>
             </header>
-
-            {/* Messages Area - Only this scrolls */}
             <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
               <div className="flex-1 overflow-hidden">
                 <Messages selectedUser={selectedUser} />
               </div>
-              
-              {/* Typing Indicator */}
               {selectedUser?._id === typingUserId && (
                 <div className="flex-shrink-0 px-4 py-2">
                   <div className="flex items-center gap-2 max-w-fit">
@@ -261,8 +251,6 @@ const ChatPage = () => {
                 </div>
               )}
             </div>
-
-            {/* Fixed Footer */}
             <footer className="flex-shrink-0 p-4 border-t border-blue-500/20 bg-gradient-to-r from-black/80 to-gray-900/80 backdrop-blur-lg">
               <div className="flex gap-3 items-end max-w-4xl mx-auto">
                 <div className="flex-1 relative min-w-0">

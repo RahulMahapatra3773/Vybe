@@ -75,8 +75,6 @@ export const getMessage = async (req, res) => {
     if (!conversation) {
       return res.status(200).json({ success: true, messages: [] });
     }
-
-    // Fetch messages with pagination
     const messages = await Message.find({ _id: { $in: conversation.messages } })
       .sort({ createdAt: -1 }) // newest first
       .skip(skip)

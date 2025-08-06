@@ -44,7 +44,7 @@ const Profile = () => {
 
       setMutualsLoading(true);
       try {
-        const res = await axios.get(`https://vybe-1.onrender.com/api/v1/user/mutuals/${userId}`, {
+        const res = await axios.get(`https://vybe-q98w.onrender.com/api/v1/user/mutuals/${userId}`, {
           withCredentials: true,
         });
 
