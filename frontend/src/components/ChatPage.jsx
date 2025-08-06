@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Input } from './ui/input';
@@ -17,14 +17,24 @@ const ChatPage = () => {
   const [textMessage, setTextMessage] = useState('');
   const { typingUserId } = useSelector((store) => store.chat);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const isSendingRef = useRef(false);
+  const lastMessageRef = useRef('');
 
   const sendMessageHandler = async (receiverId) => {
-    if (!textMessage.trim()) return;
+    const messageText = textMessage.trim();
+    if (!messageText) return;
+    if (isSendingRef.current) return;
+    if (messageText === lastMessageRef.current) return;
+    
+    isSendingRef.current = true;
+    lastMessageRef.current = messageText;
 
     try {
+      setTextMessage('');
+      
       const res = await axios.post(
         `https://vybe-q98w.onrender.com/api/v1/message/send/${receiverId}`,
-        { message: textMessage },
+        { message: messageText },
         {
           headers: { 'Content-Type': 'application/json' },
           withCredentials: true,
@@ -33,8 +43,6 @@ const ChatPage = () => {
 
       if (res.data.success) {
         const newMessage = res.data.newMessage;
-        dispatch(setMessages([...messages, newMessage]));
-        setTextMessage('');
         socket?.emit('sendMessage', {
           receiverId,
           message: newMessage,
@@ -42,6 +50,32 @@ const ChatPage = () => {
       }
     } catch (error) {
       console.error('Message send failed:', error);
+      setTextMessage(messageText);
+    } finally {
+      isSendingRef.current = false;
+      setTimeout(() => {
+        lastMessageRef.current = '';
+      }, 1000);
+    }
+  };
+  const typingTimeoutRef = useRef(null);
+  const handleTyping = () => {
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+    
+    socket?.emit("typing", { receiverId: selectedUser?._id });
+    
+    typingTimeoutRef.current = setTimeout(() => {
+    }, 1000);
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      if (textMessage.trim() && !isSendingRef.current) {
+        sendMessageHandler(selectedUser?._id);
+      }
     }
   };
 
@@ -54,13 +88,31 @@ const ChatPage = () => {
         dispatch(setTypingUser(null));
       }, 2000);
     };
+    const handleNewMessage = (newMessage) => {
+      const messageExists = messages.some(msg => 
+        msg._id === newMessage._id || 
+        (msg.message === newMessage.message && 
+         msg.senderId === newMessage.senderId && 
+         Math.abs(new Date(msg.createdAt) - new Date(newMessage.createdAt)) < 1000)
+      );
+      
+      if (!messageExists) {
+        dispatch(setMessages([...messages, newMessage]));
+      }
+    };
 
     socket.on("typing", handleTyping);
+    socket.on("newMessage", handleNewMessage);
+    
     return () => {
       socket.off("typing", handleTyping);
+      socket.off("newMessage", handleNewMessage);
       dispatch(setSelectedUser(null));
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
     };
-  }, [socket, selectedUser, dispatch]);
+  }, [socket, selectedUser, dispatch, messages]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -258,7 +310,7 @@ const ChatPage = () => {
                     value={textMessage}
                     onChange={(e) => {
                       setTextMessage(e.target.value);
-                      socket?.emit("typing", { receiverId: selectedUser?._id });
+                      handleTyping();
                     }}
                     placeholder="Type a message..."
                     className="
@@ -268,16 +320,12 @@ const ChatPage = () => {
                       focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20
                       transition-all duration-200 w-full
                     "
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter' && textMessage.trim()) {
-                        sendMessageHandler(selectedUser?._id);
-                      }
-                    }}
+                    onKeyPress={handleKeyPress}
                   />
                 </div>
                 <Button
                   onClick={() => sendMessageHandler(selectedUser?._id)}
-                  disabled={!textMessage.trim()}
+                  disabled={!textMessage.trim() || isSendingRef.current}
                   className="
                     bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700
                     disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed
