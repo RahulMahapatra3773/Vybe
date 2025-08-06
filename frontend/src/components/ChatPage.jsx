@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Input } from './ui/input';
@@ -17,25 +17,14 @@ const ChatPage = () => {
   const [textMessage, setTextMessage] = useState('');
   const { typingUserId } = useSelector((store) => store.chat);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const isSendingRef = useRef(false);
-  const lastMessageRef = useRef('');
-  const typingDisplayTimeoutRef = useRef(null);
 
   const sendMessageHandler = async (receiverId) => {
-    const messageText = textMessage.trim();
-    if (!messageText) return;
-    if (isSendingRef.current) return;
-    if (messageText === lastMessageRef.current) return;
-    
-    isSendingRef.current = true;
-    lastMessageRef.current = messageText;
+    if (!textMessage.trim()) return;
 
     try {
-      setTextMessage('');
-      
       const res = await axios.post(
         `https://vybe-q98w.onrender.com/api/v1/message/send/${receiverId}`,
-        { message: messageText },
+        { message: textMessage },
         {
           headers: { 'Content-Type': 'application/json' },
           withCredentials: true,
@@ -45,6 +34,7 @@ const ChatPage = () => {
       if (res.data.success) {
         const newMessage = res.data.newMessage;
         dispatch(setMessages([...messages, newMessage]));
+        setTextMessage('');
         socket?.emit('sendMessage', {
           receiverId,
           message: newMessage,
@@ -52,39 +42,6 @@ const ChatPage = () => {
       }
     } catch (error) {
       console.error('Message send failed:', error);
-      setTextMessage(messageText);
-    } finally {
-      isSendingRef.current = false;
-      setTimeout(() => {
-        lastMessageRef.current = '';
-      }, 1000);
-    }
-  };
-
-  const typingTimeoutRef = useRef(null);
-  const isTypingRef = useRef(false);
-  
-  const handleTyping = () => {
-    if (!isTypingRef.current) {
-      isTypingRef.current = true;
-      socket?.emit("typing", { receiverId: selectedUser?._id });
-    }
-    
-    if (typingTimeoutRef.current) {
-      clearTimeout(typingTimeoutRef.current);
-    }
-    typingTimeoutRef.current = setTimeout(() => {
-      isTypingRef.current = false;
-      socket?.emit("stopTyping", { receiverId: selectedUser?._id });
-    }, 1500);
-  };
-
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      if (textMessage.trim() && !isSendingRef.current) {
-        sendMessageHandler(selectedUser?._id);
-      }
     }
   };
 
@@ -92,51 +49,18 @@ const ChatPage = () => {
     if (!socket || !selectedUser) return;
 
     const handleTyping = ({ senderId }) => {
-      if (senderId !== selectedUser._id) return;
-      
       dispatch(setTypingUser(senderId));
-      if (typingDisplayTimeoutRef.current) {
-        clearTimeout(typingDisplayTimeoutRef.current);
-      }
-      typingDisplayTimeoutRef.current = setTimeout(() => {
+      setTimeout(() => {
         dispatch(setTypingUser(null));
-      }, 3000);
-    };
-
-    const handleStopTyping = ({ senderId }) => {
-      if (senderId === selectedUser._id) {
-        if (typingDisplayTimeoutRef.current) {
-          clearTimeout(typingDisplayTimeoutRef.current);
-        }
-        dispatch(setTypingUser(null));
-      }
-    };
-
-    const handleNewMessage = (newMessage) => {
-      if (newMessage.senderId !== user?._id) {
-        dispatch(setMessages([...messages, newMessage]));
-      }
+      }, 2000);
     };
 
     socket.on("typing", handleTyping);
-    socket.on("stopTyping", handleStopTyping);
-    socket.on("newMessage", handleNewMessage);
-    
     return () => {
       socket.off("typing", handleTyping);
-      socket.off("stopTyping", handleStopTyping);
-      socket.off("newMessage", handleNewMessage);
       dispatch(setSelectedUser(null));
-      
-      // Clear all timeouts on cleanup
-      if (typingTimeoutRef.current) {
-        clearTimeout(typingTimeoutRef.current);
-      }
-      if (typingDisplayTimeoutRef.current) {
-        clearTimeout(typingDisplayTimeoutRef.current);
-      }
     };
-  }, [socket, selectedUser, dispatch, messages]);
+  }, [socket, selectedUser, dispatch]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -305,7 +229,7 @@ const ChatPage = () => {
                 <Messages selectedUser={selectedUser} />
               </div>
               {selectedUser?._id === typingUserId && (
-                <div className="flex-shrink-0 px-4 py-2 animate-fadeIn">
+                <div className="flex-shrink-0 px-4 py-2">
                   <div className="flex items-center gap-2 max-w-fit">
                     <Avatar className="w-8 h-8 flex-shrink-0">
                       <AvatarImage src={selectedUser?.profilePicture} />
@@ -315,13 +239,11 @@ const ChatPage = () => {
                     </Avatar>
                     <div className="bg-gradient-to-r from-gray-800 to-gray-700 px-3 py-2 rounded-2xl shadow-lg">
                       <div className="flex items-center gap-2">
-                        <span className="text-sm text-gray-300">
-                          {selectedUser?.username} is typing
-                        </span>
+                        <span className="text-sm text-gray-300">Typing</span>
                         <div className="flex gap-1">
                           <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce" />
+                          <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
                           <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
-                          <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }} />
                         </div>
                       </div>
                     </div>
@@ -336,7 +258,7 @@ const ChatPage = () => {
                     value={textMessage}
                     onChange={(e) => {
                       setTextMessage(e.target.value);
-                      handleTyping();
+                      socket?.emit("typing", { receiverId: selectedUser?._id });
                     }}
                     placeholder="Type a message..."
                     className="
@@ -346,12 +268,16 @@ const ChatPage = () => {
                       focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20
                       transition-all duration-200 w-full
                     "
-                    onKeyPress={handleKeyPress}
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter' && textMessage.trim()) {
+                        sendMessageHandler(selectedUser?._id);
+                      }
+                    }}
                   />
                 </div>
                 <Button
                   onClick={() => sendMessageHandler(selectedUser?._id)}
-                  disabled={!textMessage.trim() || isSendingRef.current}
+                  disabled={!textMessage.trim()}
                   className="
                     bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700
                     disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed
