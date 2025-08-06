@@ -19,6 +19,7 @@ const ChatPage = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const isSendingRef = useRef(false);
   const lastMessageRef = useRef('');
+  const typingDisplayTimeoutRef = useRef(null);
 
   const sendMessageHandler = async (receiverId) => {
     const messageText = textMessage.trim();
@@ -43,6 +44,7 @@ const ChatPage = () => {
 
       if (res.data.success) {
         const newMessage = res.data.newMessage;
+        dispatch(setMessages([...messages, newMessage]));
         socket?.emit('sendMessage', {
           receiverId,
           message: newMessage,
@@ -58,16 +60,23 @@ const ChatPage = () => {
       }, 1000);
     }
   };
+
   const typingTimeoutRef = useRef(null);
+  const isTypingRef = useRef(false);
+  
   const handleTyping = () => {
+    if (!isTypingRef.current) {
+      isTypingRef.current = true;
+      socket?.emit("typing", { receiverId: selectedUser?._id });
+    }
+    
     if (typingTimeoutRef.current) {
       clearTimeout(typingTimeoutRef.current);
     }
-    
-    socket?.emit("typing", { receiverId: selectedUser?._id });
-    
     typingTimeoutRef.current = setTimeout(() => {
-    }, 1000);
+      isTypingRef.current = false;
+      socket?.emit("stopTyping", { receiverId: selectedUser?._id });
+    }, 1500);
   };
 
   const handleKeyPress = (e) => {
@@ -83,33 +92,48 @@ const ChatPage = () => {
     if (!socket || !selectedUser) return;
 
     const handleTyping = ({ senderId }) => {
-      dispatch(setTypingUser(senderId));
-      setTimeout(() => {
-        dispatch(setTypingUser(null));
-      }, 2000);
-    };
-    const handleNewMessage = (newMessage) => {
-      const messageExists = messages.some(msg => 
-        msg._id === newMessage._id || 
-        (msg.message === newMessage.message && 
-         msg.senderId === newMessage.senderId && 
-         Math.abs(new Date(msg.createdAt) - new Date(newMessage.createdAt)) < 1000)
-      );
+      if (senderId !== selectedUser._id) return;
       
-      if (!messageExists) {
+      dispatch(setTypingUser(senderId));
+      if (typingDisplayTimeoutRef.current) {
+        clearTimeout(typingDisplayTimeoutRef.current);
+      }
+      typingDisplayTimeoutRef.current = setTimeout(() => {
+        dispatch(setTypingUser(null));
+      }, 3000);
+    };
+
+    const handleStopTyping = ({ senderId }) => {
+      if (senderId === selectedUser._id) {
+        if (typingDisplayTimeoutRef.current) {
+          clearTimeout(typingDisplayTimeoutRef.current);
+        }
+        dispatch(setTypingUser(null));
+      }
+    };
+
+    const handleNewMessage = (newMessage) => {
+      if (newMessage.senderId !== user?._id) {
         dispatch(setMessages([...messages, newMessage]));
       }
     };
 
     socket.on("typing", handleTyping);
+    socket.on("stopTyping", handleStopTyping);
     socket.on("newMessage", handleNewMessage);
     
     return () => {
       socket.off("typing", handleTyping);
+      socket.off("stopTyping", handleStopTyping);
       socket.off("newMessage", handleNewMessage);
       dispatch(setSelectedUser(null));
+      
+      // Clear all timeouts on cleanup
       if (typingTimeoutRef.current) {
         clearTimeout(typingTimeoutRef.current);
+      }
+      if (typingDisplayTimeoutRef.current) {
+        clearTimeout(typingDisplayTimeoutRef.current);
       }
     };
   }, [socket, selectedUser, dispatch, messages]);
@@ -281,7 +305,7 @@ const ChatPage = () => {
                 <Messages selectedUser={selectedUser} />
               </div>
               {selectedUser?._id === typingUserId && (
-                <div className="flex-shrink-0 px-4 py-2">
+                <div className="flex-shrink-0 px-4 py-2 animate-fadeIn">
                   <div className="flex items-center gap-2 max-w-fit">
                     <Avatar className="w-8 h-8 flex-shrink-0">
                       <AvatarImage src={selectedUser?.profilePicture} />
@@ -291,11 +315,13 @@ const ChatPage = () => {
                     </Avatar>
                     <div className="bg-gradient-to-r from-gray-800 to-gray-700 px-3 py-2 rounded-2xl shadow-lg">
                       <div className="flex items-center gap-2">
-                        <span className="text-sm text-gray-300">Typing</span>
+                        <span className="text-sm text-gray-300">
+                          {selectedUser?.username} is typing
+                        </span>
                         <div className="flex gap-1">
                           <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce" />
-                          <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
                           <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+                          <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }} />
                         </div>
                       </div>
                     </div>
